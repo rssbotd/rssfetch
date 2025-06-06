@@ -1,0 +1,41 @@
+# This file is placed in the Public Domain.
+
+
+[build-system]
+requires = ["setuptools>=43.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "rssfetch"
+version = "1"
+authors = [
+    {name = "Bart Thate", email = "rssbotd@gmail.com" },
+]
+description = "NIXT"
+readme = "README.rst"
+license = { text="Public Domain"}
+classifiers=[
+    'Development Status :: 3 - Alpha',
+    'License :: Public Domain',
+    'Operating System :: Unix',
+    'Programming Language :: Python :: 3',
+    'Topic :: Utilities'
+]
+
+
+[project.scripts]
+"rssfetch" = "rssfetch.__main__:main"
+
+
+[project.urls]
+"home" = "https://pypi.org/project/rssfetch"
+"bugs" = "https://github.com/rssbotd/rssfetch/issues"
+"source" = "https://github.com/rssbotd/rssfetch"
+
+
+[tool.setuptools]
+packages = [
+    'rssfetch',
+    'rssfetch.modules'
+]
