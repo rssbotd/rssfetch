@@ -23,7 +23,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import quote_plus, urlencode
 
 
-from ..disk   import getpath, write
+from ..disk   import Cache, getpath
 from ..find   import find, fntime, last
 from ..fleet  import Fleet
 from ..object import Object, update
@@ -103,9 +103,9 @@ class Fetcher(Object):
                     write(fed)
                 result.append(fed)
             setattr(self.seen, feed.rss, urls)
-            if not self.seenfn:
-                self.seenfn = getpath(self.seen)
-            write(self.seen, self.seenfn)
+            #if not self.seenfn:
+            #    self.seenfn = getpath(self.seen)
+            #Cache.update(self.seenfn, self.seen)
         if silent:
             return counter
         txt = ''
@@ -125,7 +125,7 @@ class Fetcher(Object):
         return thrs
 
     def start(self, repeat=True):
-        self.seenfn = last(self.seen)
+        #self.seenfn = last(self.seen)
         if repeat:
             repeater = Repeater(300.0, self.run)
             repeater.start()
@@ -321,6 +321,25 @@ def geturl(url):
         return response
 
 
+
+def shortid():
+    return str(uuid.uuid4())[:8]
+
+
+def striphtml(text):
+    clean = re.compile('<.*?>')
+    return re.sub(clean, '', text)
+
+
+def unescape(text):
+    txt = re.sub(r'\s+', ' ', text)
+    return html.unescape(txt)
+
+
+def useragent(txt):
+    return 'Mozilla/5.0 (X11; Linux x86_64) ' + txt
+
+
 def opml(path):
     with open(path, "r", encoding="utf-8") as file:
         txt = file.read()
@@ -344,26 +363,17 @@ def opml(path):
             update(rss, obj)
             rss.rss = obj.xmlUrl
             rss.insertid = insertid
-            write(rss)
+            Cache.add(getpath(rss), rss)
             nrs += 1
+    return nrs + nrskip
+
+
+def sync():
+    fetcher = Fetcher()
+    fetcher.start(False)
+    thrs = fetcher.run(True)
+    nrs = 0
+    for thr in thrs:
+        thr.join()
+        nrs += 1
     return nrs
-
-
-def shortid():
-    return str(uuid.uuid4())[:8]
-
-
-def striphtml(text):
-    clean = re.compile('<.*?>')
-    return re.sub(clean, '', text)
-
-
-def unescape(text):
-    txt = re.sub(r'\s+', ' ', text)
-    return html.unescape(txt)
-
-
-def useragent(txt):
-    return 'Mozilla/5.0 (X11; Linux x86_64) ' + txt
-
-

@@ -23,7 +23,7 @@ from ..fleet  import Fleet
 from ..object import Object, keys
 from ..thread import launch
 from .        import debug as ldebug
-from .        import Default, Main, command, rlog
+from .        import Default, Main, rlog
 
 
 IGNORE  = ["PING", "PONG", "PRIVMSG"]
@@ -205,7 +205,6 @@ class IRC(Output, Client):
         self.register('ERROR', cb_error)
         self.register('LOG', cb_log)
         self.register('NOTICE', cb_notice)
-        self.register('PRIVMSG', cb_privmsg)
         self.register('QUIT', cb_quit)
         self.register("366", cb_ready)
         self.ident = ident(self)
@@ -573,23 +572,6 @@ def cb_notice(evt):
     if evt.txt.startswith('VERSION'):
         txt = f'\001VERSION {Main.name.upper()} 140 - {bot.cfg.username}\001'
         bot.docommand('NOTICE', evt.channel, txt)
-
-
-def cb_privmsg(evt):
-    bot = Fleet.get(evt.orig)
-    if not bot.cfg.commands:
-        return
-    if evt.txt:
-        if evt.txt[0] in ['!',]:
-            evt.txt = evt.txt[1:]
-        elif evt.txt.startswith(f'{bot.cfg.nick}:'):
-            evt.txt = evt.txt[len(bot.cfg.nick)+1:]
-        else:
-            return
-        if evt.txt:
-            evt.txt = evt.txt[0].lower() + evt.txt[1:]
-        if evt.txt:
-            command(evt)
 
 
 def cb_quit(evt):

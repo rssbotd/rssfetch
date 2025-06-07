@@ -24,26 +24,13 @@ def find(clz, selector=None, deleted=False, matching=False):
     clz = long(clz)
     if selector is None:
         selector = {}
-    for pth in fns(clz):
+    for pth in Cache.typed(clz):
         obj = Cache.get(pth)
-        if not obj:
-            obj = Object()
-            read(obj, pth)
-            Cache.add(pth, obj)
         if not deleted and isdeleted(obj):
             continue
         if selector and not search(obj, selector, matching):
             continue
         yield pth, obj
-
-
-def fns(clz):
-    pth = store(clz)
-    for rootdir, dirs, _files in os.walk(pth, topdown=False):
-        for dname in dirs:
-            ddd = j(rootdir, dname)
-            for fll in os.listdir(ddd):
-                yield j(ddd, fll)
 
 
 def fntime(daystr):

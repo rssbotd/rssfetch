@@ -42,7 +42,7 @@ class Cache:
         for key in Cache.objs:
             if matcher not in key:
                 continue
-            yield Cache.objs.get(key)
+            yield key
 
     @staticmethod
     def update(path, obj):

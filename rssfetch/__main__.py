@@ -12,14 +12,14 @@ import _thread
 
 
 from .event   import Event
-from .modules import Commands, Main, command, inits
-from .modules import md5sum, mods, level, modules, parse, rlog, scan, settable
+from .modules import Main, inits
+from .modules import md5sum, mods, level, modules, parse, rlog
 from .serial  import dumps
 from .paths   import Workdir, pidname
 from .thread  import Errors, full
 
 
-from .modules.rss import opml, shortid
+from .modules.rss import opml, shortid, sync
 
 
 "handler"
@@ -125,7 +125,6 @@ def background():
     setwd(Main.name)
     privileges()
     pidfile(pidname(Main.name))
-    settable()
     imp()
     inits(Main.init or "irc,rss")
     forever()
@@ -133,10 +132,12 @@ def background():
 
 def service():
     setwd(Main.name)
-    settable()
     level(Main.level or "none")
-    imp()
-    banner()
+    nrs = imp()
+    if nrs:
+        banner()
+        nrs = sync()
+        out(f"{nrs} feeds synced")
     privileges()
     pidfile(pidname(Main.name))
     inits(Main.init or "irc,rss")
@@ -153,9 +154,7 @@ def imp():
         out(f"no {fnm} file found.")
         os._exit(0)
         return
-    nrs = opml(fnm)
-    if nrs:
-        out(f"added {nrs} urls.")
+    return opml(fnm)
 
 
 "runtime"

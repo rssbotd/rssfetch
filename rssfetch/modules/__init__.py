@@ -57,42 +57,7 @@ class Main(Default):
     version = 323
 
 
-class Commands:
-
-    cmds  = {}
-    md5   = {}
-    names = {}
-
-    @staticmethod
-    def add(func, mod=None):
-        Commands.cmds[func.__name__] = func
-        if mod:
-            Commands.names[func.__name__] = mod.__name__.split(".")[-1]
-
-    @staticmethod
-    def get(cmd):
-        func = Commands.cmds.get(cmd, None)
-        if not func:
-            name = Commands.names.get(cmd, None)
-            if not name:
-                return None
-            if Main.md5 and not check(name):
-                return None
-            mod = load(name)
-            if mod:
-                scan(mod)
-                func = Commands.cmds.get(cmd)
-        return func
-
-
-def command(evt):
-    parse(evt)
-    func = Commands.get(evt.cmd)
-    if func:
-        func(evt)
-        Fleet.display(evt)
-    else:
-        evt.ready()
+"runtime"
 
 
 def inits(names):
@@ -168,18 +133,6 @@ def parse(obj, txt=""):
         obj.txt  = obj.cmd + " " + obj.rest
     else:
         obj.txt = obj.cmd or ""
-
-
-def scan(mod):
-    for key, cmdz in inspect.getmembers(mod, inspect.isfunction):
-        if key.startswith("cb"):
-            continue
-        if 'event' in cmdz.__code__.co_varnames:
-            Commands.add(cmdz, mod)
-
-
-def settable():
-    Commands.names.update(table())
 
 
 "modules"
@@ -377,6 +330,8 @@ def spl(txt):
     return [x for x in result if x]
 
 
+"methods"
+
 
 def fmt(obj, args=None, skip=None, plain=False):
     if args is None:
@@ -401,6 +356,9 @@ def fmt(obj, args=None, skip=None, plain=False):
     return txt.strip()
 
 
+"data"
+
+
 LEVELS = {'debug': logging.DEBUG,
           'info': logging.INFO,
           'warning': logging.WARNING,
@@ -408,6 +366,9 @@ LEVELS = {'debug': logging.DEBUG,
           'error': logging.ERROR,
           'critical': logging.CRITICAL
          }
+
+
+"interface"
 
 
 def __dir__():
