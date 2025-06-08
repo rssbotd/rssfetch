@@ -9,9 +9,8 @@ import threading
 import time
 
 
-from .disk   import Cache, read
+from .cache  import Cache
 from .object import Object, fqn, items, update
-from .paths  import long, skel, store
 
 
 lock = threading.RLock()
@@ -19,9 +18,8 @@ j    = os.path.join
 
 
 def find(clz, selector=None, deleted=False, matching=False):
-    skel()
     res = []
-    clz = long(clz)
+    clz = Cache.long(clz)
     if selector is None:
         selector = {}
     for pth in Cache.typed(clz):

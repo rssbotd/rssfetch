@@ -15,8 +15,8 @@ import threading
 import time
 
 
+from ..cache  import getpath, ident
 from ..client import Client
-from ..disk   import getpath, ident, write
 from ..event  import Event as IEvent
 from ..find   import last
 from ..fleet  import Fleet

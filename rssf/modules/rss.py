@@ -23,7 +23,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import quote_plus, urlencode
 
 
-from ..disk   import Cache, getpath
+from ..cache  import Cache, getpath
 from ..find   import find, fntime, last
 from ..fleet  import Fleet
 from ..object import Object, update
@@ -99,13 +99,11 @@ class Fetcher(Object):
                 urls.append(uurl)
                 if uurl in seen:
                     continue
-                if self.dosave:
-                    write(fed)
                 result.append(fed)
             setattr(self.seen, feed.rss, urls)
-            #if not self.seenfn:
-            #    self.seenfn = getpath(self.seen)
-            #Cache.update(self.seenfn, self.seen)
+            if not self.seenfn:
+                self.seenfn = getpath(self.seen)
+            Cache.update(self.seenfn, self.seen)
         if silent:
             return counter
         txt = ''
@@ -125,7 +123,7 @@ class Fetcher(Object):
         return thrs
 
     def start(self, repeat=True):
-        #self.seenfn = last(self.seen)
+        self.seenfn = last(self.seen) or getpath(self.seen)
         if repeat:
             repeater = Repeater(300.0, self.run)
             repeater.start()
@@ -319,7 +317,6 @@ def geturl(url):
     with urllib.request.urlopen(req) as response: # nosec
         response.data = response.read()
         return response
-
 
 
 def shortid():

@@ -131,7 +131,11 @@ def background():
 
 
 def service():
-    setwd(Main.name)
+    parse(Main, " ".join(sys.argv[1:]))
+    Main.name = "rssfetch"
+    Main.init = Main.sets.init or Main.init
+    Main.verbose = Main.sets.verbose or Main.verbose
+    Main.level   = Main.sets.level or Main.level or "warn"
     level(Main.level or "none")
     nrs = imp()
     if nrs:
