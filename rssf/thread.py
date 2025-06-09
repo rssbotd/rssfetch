@@ -61,7 +61,7 @@ class Timy(threading.Timer):
 
     def __init__(self, sleep, func, *args, **kwargs):
         super().__init__(sleep, func)
-        self.setName(kwargs.get("name", name(func)))
+        self.name      = kwargs.get("name", name(func))
         self.sleep     = sleep
         self.state     = {}
         self.starttime = time.time()

@@ -220,13 +220,13 @@ def parse(obj, txt=""):
         obj.txt = obj.cmd or ""
 
 
-def rlog(level, txt, ignore=None):
+def rlog(lvl, txt, ignore=None):
     if ignore is None:
         ignore = []
     for ign in ignore:
         if ign in str(txt):
             return
-    logging.log(LEVELS.get(level), txt)
+    logging.log(LEVELS.get(lvl), txt)
 
 
 def spl(txt):
@@ -244,4 +244,3 @@ LEVELS = {'debug': logging.DEBUG,
           'error': logging.ERROR,
           'critical': logging.CRITICAL
          }
-

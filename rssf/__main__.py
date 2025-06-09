@@ -48,7 +48,6 @@ def checkargs():
     if len(sys.argv) < 2:
         out(f"{Main.name} <filename>")
         os._exit(0)
-        return
     fnm = sys.argv[1]
     if not os.path.exists(fnm):
         out(f"no {fnm} file found.")

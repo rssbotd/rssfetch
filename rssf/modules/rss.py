@@ -134,10 +134,9 @@ class Fetcher(Object):
             thrs.append(launch(self.fetch, feed, silent))
         return thrs
 
-    def start(self, repeat=True):
-        if repeat:
-            repeater = Repeater(300.0, self.run)
-            repeater.start()
+    def start(self):
+        repeater = Repeater(300.0, self.run)
+        repeater.start()
 
 
 class OPML:
@@ -255,9 +254,6 @@ class Parser:
         return result
 
 
-"utilities"
-
-
 def attrs(obj, txt):
     update(obj, OPML.parse(txt))
 
@@ -318,24 +314,6 @@ def geturl(url):
         return response
 
 
-def shortid():
-    return str(uuid.uuid4())[:8]
-
-
-def striphtml(text):
-    clean = re.compile('<.*?>')
-    return re.sub(clean, '', text)
-
-
-def unescape(text):
-    txt = re.sub(r'\s+', ' ', text)
-    return html.unescape(txt)
-
-
-def useragent(txt):
-    return 'Mozilla/5.0 (X11; Linux x86_64) ' + txt
-
-
 def opml(path):
     with open(path, "r", encoding="utf-8") as file:
         txt = file.read()
@@ -364,12 +342,29 @@ def opml(path):
     return nrs + nrskip
 
 
+def shortid():
+    return str(uuid.uuid4())[:8]
+
+
+def striphtml(text):
+    clean = re.compile('<.*?>')
+    return re.sub(clean, '', text)
+
+
 def sync():
     fetcher = Fetcher()
-    fetcher.start(False)
     thrs = fetcher.run(True)
     nrs = 0
     for thr in thrs:
         thr.join()
         nrs += 1
     return nrs
+
+
+def unescape(text):
+    txt = re.sub(r'\s+', ' ', text)
+    return html.unescape(txt)
+
+
+def useragent(txt):
+    return 'Mozilla/5.0 (X11; Linux x86_64) ' + txt
