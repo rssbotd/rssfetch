@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # This file is placed in the Public Domain.
 
 
@@ -10,12 +11,15 @@ import time
 import _thread
 
 
-from .errors  import Errors, full
-from .modules import Main, fmt, inits, level, parse
-from .object  import update
+sys.path.insert(0, os.getcwd())
 
 
-from .modules.rss import opml, sync
+from rssfetch.errors  import Errors, full
+from rssfetch.modules import Main, fmt, inits, level, parse
+from rssfetch.object  import update
+
+
+from rssfetch.modules.rss import opml, sync
 
 
 def background():

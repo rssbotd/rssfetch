@@ -24,10 +24,6 @@ classifiers=[
 ]
 
 
-[project.scripts]
-"rssfetch" = "rssf.__main__:main"
-
-
 [project.urls]
 "home" = "https://pypi.org/project/rssfetch"
 "bugs" = "https://github.com/rssbotd/rssfetch/issues"
@@ -35,7 +31,10 @@ classifiers=[
 
 
 [tool.setuptools]
+script-files = [
+    'bin/rssfetch',
+]
 packages = [
-    'rssf',
-    'rssf.modules'
+    'rssfetch',
+    'rssfetch.modules'
 ]

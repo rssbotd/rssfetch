@@ -6,6 +6,7 @@
 
 import importlib
 import importlib.util
+import inspect
 import logging
 import os
 import sys
@@ -14,6 +15,7 @@ import time
 import _thread
 
 
+from ..fleet  import Fleet
 from ..object import Object, keys
 from ..thread import later, launch
 
@@ -46,6 +48,91 @@ class Main(Default):
     port    = 6667
     server  = "localhost"
     sets    = Default()
+
+
+class Commands:
+
+    cmds  = {}
+    names = {}
+
+    @staticmethod
+    def add(func, mod=None):
+        Commands.cmds[func.__name__] = func
+        if mod:
+            Commands.names[func.__name__] = mod.__name__.split(".")[-1]
+
+    @staticmethod
+    def get(cmd):
+        func = Commands.cmds.get(cmd, None)
+        if not func:
+            name = Commands.names.get(cmd, None)
+            if not name:
+                return None
+            mod = load(name)
+            if mod:
+                scan(mod)
+                func = Commands.cmds.get(cmd)
+        return func
+
+
+def command(evt):
+    parse(evt)
+    func = Commands.get(evt.cmd)
+    if func:
+        func(evt)
+        Fleet.display(evt)
+    else:
+        evt.ready()
+
+
+def scan(mod):
+    for key, cmdz in inspect.getmembers(mod, inspect.isfunction):
+        if key.startswith("cb"):
+            continue
+        if 'event' in cmdz.__code__.co_varnames:
+            Commands.add(cmdz, mod)
+
+
+"modules"
+
+
+def inits(names):
+    modz = []
+    for name in sorted(spl(names)):
+        try:
+            mod = load(name)
+            if not mod:
+                continue
+            if "init" in dir(mod):
+                thr = launch(mod.init)
+                modz.append((mod, thr))
+        except Exception as ex:
+            later(ex)
+            _thread.interrupt_main()
+    return modz
+
+
+def load(name):
+    with lock:
+        module = None
+        mname = f"{__name__}.{name}"
+        module = sys.modules.get(mname, None)
+        if not module:
+            pth = os.path.join(path, f"{name}.py")
+            if not os.path.exists(pth):
+                return None
+            spec = importlib.util.spec_from_file_location(mname, pth)
+            if not spec or not spec.loader:
+                return None
+            module = importlib.util.module_from_spec(spec)
+            if not module:
+                return None
+            spec.loader.exec_module(module)
+            sys.modules[mname] = module
+        return module
+
+
+"utilities"
 
 
 def elapsed(seconds, short=True):
@@ -110,51 +197,6 @@ def fmt(obj, args=None, skip=None, plain=False, empty=False):
     return txt.strip()
 
 
-def inits(names):
-    modz = []
-    for name in sorted(spl(names)):
-        try:
-            mod = load(name)
-            if not mod:
-                continue
-            if "init" in dir(mod):
-                thr = launch(mod.init)
-                modz.append((mod, thr))
-        except Exception as ex:
-            later(ex)
-            _thread.interrupt_main()
-    return modz
-
-
-def level(loglevel="debug"):
-    if loglevel != "none":
-        os.environ["PYTHONUNBUFFERED"] = "yoo"
-        format_short = "%(message)-80s"
-        datefmt = '%H:%M:%S'
-        logging.basicConfig(stream=sys.stderr, datefmt=datefmt, format=format_short)
-        logging.getLogger().setLevel(LEVELS.get(loglevel))
-
-
-def load(name):
-    with lock:
-        module = None
-        mname = f"{__name__}.{name}"
-        module = sys.modules.get(mname, None)
-        if not module:
-            pth = os.path.join(path, f"{name}.py")
-            if not os.path.exists(pth):
-                return None
-            spec = importlib.util.spec_from_file_location(mname, pth)
-            if not spec or not spec.loader:
-                return None
-            module = importlib.util.module_from_spec(spec)
-            if not module:
-                return None
-            spec.loader.exec_module(module)
-            sys.modules[mname] = module
-        return module
-
-
 def parse(obj, txt=""):
     if txt == "":
         if "txt" in dir(obj):
@@ -214,6 +256,26 @@ def parse(obj, txt=""):
         obj.txt = obj.cmd or ""
 
 
+def spl(txt):
+    try:
+        result = txt.split(',')
+    except (TypeError, ValueError):
+        result = [txt, ]
+    return [x for x in result if x]
+
+
+"logging"
+
+
+def level(loglevel="debug"):
+    if loglevel != "none":
+        os.environ["PYTHONUNBUFFERED"] = "yoo"
+        format_short = "%(message)-80s"
+        datefmt = '%H:%M:%S'
+        logging.basicConfig(stream=sys.stderr, datefmt=datefmt, format=format_short)
+        logging.getLogger().setLevel(LEVELS.get(loglevel))
+
+
 def rlog(lvl, txt, ignore=None):
     if ignore is None:
         ignore = []
@@ -221,14 +283,6 @@ def rlog(lvl, txt, ignore=None):
         if ign in str(txt):
             return
     logging.log(LEVELS.get(lvl), txt)
-
-
-def spl(txt):
-    try:
-        result = txt.split(',')
-    except (TypeError, ValueError):
-        result = [txt, ]
-    return [x for x in result if x]
 
 
 LEVELS = {'debug': logging.DEBUG,
