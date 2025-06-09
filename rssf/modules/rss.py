@@ -7,11 +7,7 @@
 import html
 import html.parser
 import http.client
-import logging
-import os
 import re
-import sys
-import time
 import urllib
 import urllib.parse
 import urllib.request
@@ -23,11 +19,11 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import quote_plus, urlencode
 
 
-from ..cache  import Cache, find, fntime, getpath
+from ..cache  import Cache, find, getpath
 from ..fleet  import Fleet
 from ..object import Object, update
-from ..thread import Repeater, launch, line
-from .        import Default, elapsed, fmt, rlog, spl
+from ..thread import Repeater, launch
+from .        import Default, rlog, spl
 
 
 DEBUG = False
@@ -245,11 +241,11 @@ class Parser:
     @staticmethod
     def parse(txt, toke="item", items='title,link'):
         result = []
-        for line in Parser.getitems(txt, toke):
-            line = line.strip()
+        for linez in Parser.getitems(txt, toke):
+            linez = linez.strip()
             obj = Object()
             for itm in spl(items):
-                val = Parser.getitem(line, itm)
+                val = Parser.getitem(linez, itm)
                 if val:
                     val = unescape(val.strip())
                     val = val.replace("\n", "")
@@ -259,8 +255,6 @@ class Parser:
         return result
 
 
-
-
 "utilities"
 
 
@@ -268,13 +262,13 @@ def attrs(obj, txt):
     update(obj, OPML.parse(txt))
 
 
-def cdata(line):
-    if 'CDATA' in line:
-        lne = line.replace('![CDATA[', '')
-        lne = lne.replace(']]', '')
-        lne = lne[1:-1]
-        return lne
-    return line
+def cdata(lne):
+    if 'CDATA' in lne:
+        ln = lne.replace('![CDATA[', '')
+        ln = ln.replace(']]', '')
+        ln = ln[1:-1]
+        return ln
+    return lne
 
 
 def getfeed(url, items):

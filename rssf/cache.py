@@ -10,7 +10,7 @@ import threading
 import time
 
 
-from .object import Object, fqn, items, update
+from .object import fqn, items, update
 
 
 lock = threading.RLock()
@@ -46,7 +46,6 @@ class Cache:
 
 
 def find(clz, selector=None, deleted=False, matching=False):
-    res = []
     clz = long(clz)
     if selector is None:
         selector = {}

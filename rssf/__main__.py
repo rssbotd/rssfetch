@@ -5,38 +5,27 @@
 
 
 import os
-import pathlib
 import sys
 import time
 import _thread
 
 
-from .event   import Event
-from .modules import Main, inits
-from .modules import md5sum, mods, level, modules, parse, rlog
-from .serial  import dumps
+from .modules import Main, inits, level, parse
 from .thread  import Errors, full
 
 
-from .modules.rss import opml, shortid, sync
+from .modules.rss import opml, sync
 
 
-"handler"
-
-
-def handler(signum, frame):
-    _thread.interrupt_main()
-
-
-"output"
-
-
-def out(txt):
-    print(txt.rstrip())
-    sys.stdout.flush()
-
-
-"utilities"
+def background():
+    daemon("-v" in sys.argv)
+    privileges()
+    fnm = checkargs()
+    banner()
+    opml(fnm)
+    sync()
+    inits("irc,rss")
+    forever()
 
 
 def banner():
@@ -53,6 +42,18 @@ def check(txt):
             if char in arg:
                 return True
     return False
+
+
+def checkargs():
+    if len(sys.argv) < 2:
+        out(f"{Main.name} <filename>")
+        os._exit(0)
+        return
+    fnm = sys.argv[1]
+    if not os.path.exists(fnm):
+        out(f"no {fnm} file found.")
+        os._exit(0)
+    return fnm
 
 
 def daemon(verbose=False):
@@ -88,18 +89,9 @@ def forever():
             _thread.interrupt_main()
 
 
-def nodebug():
-    with open('/dev/null', 'a+', encoding="utf-8") as ses:
-        os.dup2(ses.fileno(), sys.stderr.fileno())
-
-
-def pidfile(filename):
-    if os.path.exists(filename):
-        os.unlink(filename)
-    path2 = pathlib.Path(filename)
-    path2.parent.mkdir(parents=True, exist_ok=True)
-    with open(filename, "w", encoding="utf-8") as fds:
-        fds.write(str(os.getpid()))
+def out(txt):
+    print(txt.rstrip())
+    sys.stdout.flush()
 
 
 def privileges():
@@ -110,54 +102,17 @@ def privileges():
     os.setuid(pwnam2.pw_uid)
 
 
-def setwd(name, path=""):
-    Main.name = name
-    path = path or os.path.expanduser(f"~/.{name}")
-    Workdir.wdr = path
-
-
-"scripts"
-
-
-def background():
-    daemon("-v" in sys.argv)
-    privileges()
-    imp()
-    inits(Main.init or "irc,rss")
-    forever()
-
-
 def service():
     parse(Main, " ".join(sys.argv[1:]))
-    Main.name = "rssfetch"
-    Main.init = Main.sets.init or Main.init
-    Main.verbose = Main.sets.verbose or Main.verbose
-    Main.level   = Main.sets.level or Main.level or "warn"
-    level(Main.level or "none")
-    nrs = imp()
-    if nrs:
-        banner()
-        nrs = sync()
-        out(f"{nrs} feeds synced")
+    level(Main.level)
+    fnm = checkargs()
+    banner()
+    opml(fnm)
+    nrs = sync()
+    out(f"{nrs} feeds synced")
     privileges()
-    inits(Main.init or "irc,rss")
+    inits("irc,rss")
     forever()
-
-
-def imp():
-    if len(sys.argv) < 2:
-        out(f"{Main.name} <filename>")
-        os._exit(0)
-        return
-    fnm = sys.argv[1]
-    if not os.path.exists(fnm):
-        out(f"no {fnm} file found.")
-        os._exit(0)
-        return
-    return opml(fnm)
-
-
-"runtime"
 
 
 def wrapped(func):
@@ -182,12 +137,7 @@ def wrap(func):
             termios.tcsetattr(sys.stdin.fileno(), termios.TCSADRAIN, old)
 
 
-"main"
-
-
 def main():
-    if check("a"):
-        Main.init = ",".join(modules())
     if check("v"):
         level("debug")
         setattr(Main.opts, "v", True)

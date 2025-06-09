@@ -4,8 +4,6 @@
 "internet relay chat"
 
 
-import base64
-import logging
 import os
 import queue
 import socket
@@ -15,13 +13,12 @@ import threading
 import time
 
 
-from ..cache  import getpath, ident
+from ..cache  import ident
 from ..client import Client
 from ..event  import Event as IEvent
 from ..fleet  import Fleet
-from ..object import Object, keys
+from ..object import Object
 from ..thread import launch
-from .        import debug as ldebug
 from .        import Default, Main, rlog
 
 
@@ -29,13 +26,6 @@ IGNORE  = ["PING", "PONG", "PRIVMSG"]
 
 
 saylock = threading.RLock()
-
-
-def debug(txt):
-    for ign in IGNORE:
-        if ign in str(txt):
-            return
-    logging.debug(txt)
 
 
 def init():
@@ -49,7 +39,6 @@ def init():
 class Config(Default):
 
     channel = f'#{Main.name}'
-    commands = True
     control = '!'
     nick = Main.name
     password = ""
@@ -64,12 +53,11 @@ class Config(Default):
 
     def __init__(self):
         Default.__init__(self)
-        self.channel = Config.channel
-        self.commands = Config.commands
-        self.nick = Config.nick
-        self.port = Config.port
+        self.channel = Main.sets.channel or Config.channel
+        self.nick = Main.sets.nick or Config.nick
+        self.port = Main.sets.ports or Config.port
         self.realname = Config.realname
-        self.server = Config.server
+        self.server = Main.sets.server or Config.server
         self.username = Config.username
 
 
