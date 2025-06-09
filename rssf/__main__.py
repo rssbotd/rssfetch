@@ -10,9 +10,9 @@ import time
 import _thread
 
 
-from .modules import Main, inits, level, parse
+from .modules import Main, fmt, inits, level, parse
+from .object  import update
 from .thread  import Errors, full
-
 
 from .modules.rss import opml, sync
 
@@ -103,9 +103,12 @@ def privileges():
 
 def service():
     parse(Main, " ".join(sys.argv[1:]))
+    update(Main, Main.sets)
+    Main.level = Main.sets.level or "warn"
     level(Main.level)
     fnm = checkargs()
     banner()
+    out(fmt(Main, skip="cmd,sets,txt,otxt", empty=False))
     opml(fnm)
     nrs = sync()
     out(f"{nrs} feeds synced")

@@ -52,9 +52,13 @@ def keys(obj):
 
 
 def update(obj, data):
-    if isinstance(data, dict):
-        return obj.__dict__.update(data)
-    obj.__dict__.update(vars(data))
+    if obj.__class__ == type:
+        for k,v in items(data):
+           setattr(obj, k, v)
+    elif isinstance(data, dict):
+        obj.__dict__.update(data)
+    else:
+        obj.__dict__.update(vars(data))
 
 
 def values(obj):

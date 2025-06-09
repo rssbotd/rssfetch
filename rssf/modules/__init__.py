@@ -37,10 +37,8 @@ class Main(Default):
 
     debug   = False
     gets    = Default()
-    ignore  = "now,req"
     init    = ""
     level   = "warn"
-    md5     = True
     name    = __name__.split(".", maxsplit=1)[0]
     nick    = "rssfetch"
     opts    = Default()
@@ -48,8 +46,6 @@ class Main(Default):
     port    = 6667
     server  = "localhost"
     sets    = Default()
-    verbose = False
-    version = 323
 
 
 def elapsed(seconds, short=True):
@@ -91,7 +87,7 @@ def elapsed(seconds, short=True):
     return txt
 
 
-def fmt(obj, args=None, skip=None, plain=False):
+def fmt(obj, args=None, skip=None, plain=False, empty=False):
     if args is None:
         args = keys(obj)
     if skip is None:
@@ -100,10 +96,10 @@ def fmt(obj, args=None, skip=None, plain=False):
     for key in args:
         if key.startswith("__"):
             continue
-        if key in skip:
+        if skip and key in spl(skip):
             continue
         value = getattr(obj, key, None)
-        if value is None:
+        if not empty and not value:
             continue
         if plain:
             txt += f"{value} "
@@ -141,8 +137,6 @@ def level(loglevel="debug"):
 
 def load(name):
     with lock:
-        if name in Main.ignore:
-            return None
         module = None
         mname = f"{__name__}.{name}"
         module = sys.modules.get(mname, None)
