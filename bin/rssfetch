@@ -1,1 +1,1 @@
-python3 -m rssf $* ;
+python3 -m rssfetch $* ;

@@ -11,12 +11,13 @@ import unittest
 
 
 import rssfetch
+import rssfetch.cache
 import rssfetch.client
+import rssfetch.event
+import rssfetch.fleet
 import rssfetch.handler
 import rssfetch.modules
 import rssfetch.object
-import rssfetch.paths
-import rssfetch.serial
 import rssfetch.thread
 
 
@@ -24,12 +25,13 @@ from rssfetch.object import *
 
 
 PACKAGE = [
+    'cache',
     'client',
+    'event',
+    'fleet',
     'handler',
     'object',
     'modules',
-    'paths',
-    'serial',
     'thread'
 ]
 

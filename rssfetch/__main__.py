@@ -10,9 +10,10 @@ import time
 import _thread
 
 
+from .errors  import Errors, full
 from .modules import Main, fmt, inits, level, parse
 from .object  import update
-from .thread  import Errors, full
+
 
 from .modules.rss import opml, sync
 

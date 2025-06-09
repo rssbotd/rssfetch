@@ -22,7 +22,8 @@ from urllib.parse import quote_plus, urlencode
 from ..cache  import Cache, find, getpath
 from ..fleet  import Fleet
 from ..object import Object, update
-from ..thread import Repeater, launch
+from ..thread import launch
+from ..timer  import Repeater
 from .        import Default, rlog, spl
 
 
