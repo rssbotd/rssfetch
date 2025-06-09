@@ -39,10 +39,28 @@ importlock = _thread.allocate_lock()
 skipped    = []
 
 
+class Urls(Default):
+
+    pass
+
+
+seen = Urls()
+
+
 def init():
     fetcher = Fetcher()
     fetcher.start()
     return fetcher
+
+
+class Rss(Default):
+
+    def __init__(self):
+        Default.__init__(self)
+        self.display_list = 'title,link,author'
+        self.insertid     = None
+        self.name         = ""
+        self.rss          = ""
 
 
 class Feed(Default):
@@ -52,12 +70,11 @@ class Feed(Default):
         self.name = ""
 
 
+
 class Fetcher(Object):
 
     def __init__(self):
         self.dosave = False
-        self.seen = Urls()
-        self.seenfn = None
 
     @staticmethod
     def display(obj):
@@ -83,8 +100,8 @@ class Fetcher(Object):
     def fetch(self, feed, silent=False):
         with fetchlock:
             result = []
-            seen = getattr(self.seen, feed.rss, [])
-            urls = []
+            see = getattr(seen, feed.rss, [])
+            urlz = []
             counter = 0
             for obj in reversed(getfeed(feed.rss, feed.display_list)):
                 counter += 1
@@ -96,14 +113,11 @@ class Fetcher(Object):
                     uurl = f'{url.scheme}://{url.netloc}/{url.path}'
                 else:
                     uurl = fed.link
-                urls.append(uurl)
-                if uurl in seen:
+                urlz.append(uurl)
+                if uurl in see:
                     continue
                 result.append(fed)
-            setattr(self.seen, feed.rss, urls)
-            if not self.seenfn:
-                self.seenfn = getpath(self.seen)
-            Cache.update(self.seenfn, self.seen)
+            setattr(seen, feed.rss, urlz)
         if silent:
             return counter
         txt = ''
@@ -123,7 +137,6 @@ class Fetcher(Object):
         return thrs
 
     def start(self, repeat=True):
-        self.seenfn = last(self.seen) or getpath(self.seen)
         if repeat:
             repeater = Repeater(300.0, self.run)
             repeater.start()
@@ -244,19 +257,6 @@ class Parser:
         return result
 
 
-class Rss(Default):
-
-    def __init__(self):
-        Default.__init__(self)
-        self.display_list = 'title,link,author'
-        self.insertid     = None
-        self.name         = ""
-        self.rss          = ""
-
-
-class Urls(Default):
-
-    pass
 
 
 "utilities"
