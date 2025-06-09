@@ -15,7 +15,6 @@ from .event   import Event
 from .modules import Main, inits
 from .modules import md5sum, mods, level, modules, parse, rlog
 from .serial  import dumps
-from .paths   import Workdir, pidname
 from .thread  import Errors, full
 
 
@@ -122,9 +121,7 @@ def setwd(name, path=""):
 
 def background():
     daemon("-v" in sys.argv)
-    setwd(Main.name)
     privileges()
-    pidfile(pidname(Main.name))
     imp()
     inits(Main.init or "irc,rss")
     forever()
@@ -143,7 +140,6 @@ def service():
         nrs = sync()
         out(f"{nrs} feeds synced")
     privileges()
-    pidfile(pidname(Main.name))
     inits(Main.init or "irc,rss")
     forever()
 

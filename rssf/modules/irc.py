@@ -18,7 +18,6 @@ import time
 from ..cache  import getpath, ident
 from ..client import Client
 from ..event  import Event as IEvent
-from ..find   import last
 from ..fleet  import Fleet
 from ..object import Object, keys
 from ..thread import launch
@@ -491,7 +490,6 @@ class IRC(Output, Client):
         self.state.lastline = splitted[-1]
 
     def start(self):
-        last(self.cfg)
         if self.cfg.channel not in self.channels:
             self.channels.append(self.cfg.channel)
         self.events.ready.clear()

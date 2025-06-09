@@ -23,8 +23,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import quote_plus, urlencode
 
 
-from ..cache  import Cache, getpath
-from ..find   import find, fntime, last
+from ..cache  import Cache, find, fntime, getpath
 from ..fleet  import Fleet
 from ..object import Object, update
 from ..thread import Repeater, launch, line
@@ -36,6 +35,9 @@ DEBUG = False
 
 fetchlock  = _thread.allocate_lock()
 importlock = _thread.allocate_lock()
+
+
+errors     = []
 skipped    = []
 
 
@@ -282,7 +284,10 @@ def getfeed(url, items):
     try:
         rest = geturl(url)
     except (http.client.HTTPException, ValueError, HTTPError, URLError) as ex:
-        rlog("error", f"{url} {ex}")
+        txt = f"{url} {ex}"
+        if txt not in errors:
+            rlog("error", txt)
+            errors.append(txt)
         return result
     if rest:
         if url.endswith('atom'):
