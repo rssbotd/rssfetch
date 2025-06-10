@@ -39,6 +39,7 @@ class Main(Default):
 
     debug   = False
     gets    = Default()
+    ignore  = ""
     init    = ""
     level   = "warn"
     name    = __name__.split(".", maxsplit=1)[0]
@@ -56,10 +57,9 @@ class Commands:
     names = {}
 
     @staticmethod
-    def add(func, mod=None):
+    def add(func):
         Commands.cmds[func.__name__] = func
-        if mod:
-            Commands.names[func.__name__] = mod.__name__.split(".")[-1]
+        Commands.names[func.__name__] = func.__module__.split(".")[-1]
 
     @staticmethod
     def get(cmd):

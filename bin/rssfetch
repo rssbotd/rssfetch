@@ -14,12 +14,45 @@ import _thread
 sys.path.insert(0, os.getcwd())
 
 
+from rssfetch.client  import Client
 from rssfetch.errors  import Errors, full
-from rssfetch.modules import Main, fmt, inits, level, parse
+from rssfetch.event   import Event
+from rssfetch.modules import Commands, Main, command, fmt, inits, level, parse
 from rssfetch.object  import update
+from rssfetch.persist import setwd
 
 
 from rssfetch.modules.rss import opml, sync
+
+
+class CLI(Client):
+
+    def __init__(self):
+        Client.__init__(self)
+        self.register("command", command)
+
+    def raw(self, txt):
+        out(txt.encode('utf-8', 'replace').decode("utf-8"))
+
+
+class Console(CLI):
+
+    def announce(self, txt):
+        #out(txt)
+        pass
+
+    def callback(self, evt):
+        CLI.callback(self, evt)
+        evt.wait()
+
+    def poll(self):
+        evt = Event()
+        evt.txt = input("> ")
+        evt.type = "command"
+        return evt
+
+
+"scripts"
 
 
 def background():
@@ -31,6 +64,58 @@ def background():
     sync()
     inits("irc,rss")
     forever()
+
+
+def console():
+    import readline # noqa: F401
+    setwd(Main.name)
+    Commands.add(cmd)
+    parse(Main, " ".join(sys.argv[1:]))
+    update(Main, Main.sets)
+    level(Main.level or "debug")
+    if "v" in Main.opts:
+        banner()
+    for _mod, thr in inits(Main.init):
+        if "w" in Main.opts:
+            thr.join(30.0)
+    csl = Console()
+    csl.start()
+    forever()
+
+
+def control():
+    if len(sys.argv) == 1:
+        return
+    setwd(Main.name)
+    Commands.add(cmd)
+    parse(Main, " ".join(sys.argv[1:]))
+    level(Main.level or "warn")
+    csl = CLI()
+    evt = Event()
+    evt.orig = repr(csl)
+    evt.type = "command"
+    evt.txt = Main.otxt
+    command(evt)
+    evt.wait()
+
+
+def service():
+    parse(Main, " ".join(sys.argv[1:]))
+    update(Main, Main.sets)
+    Main.level = Main.sets.level or "warn"
+    level(Main.level)
+    fnm = checkargs()
+    banner()
+    out(fmt(Main, skip="cmd,sets,txt,otxt", empty=False))
+    opml(fnm)
+    nrs = sync()
+    out(f"{nrs} feeds synced")
+    privileges()
+    inits("irc,rss")
+    forever()
+
+
+"utilities"
 
 
 def banner():
@@ -106,20 +191,14 @@ def privileges():
     os.setuid(pwnam2.pw_uid)
 
 
-def service():
-    parse(Main, " ".join(sys.argv[1:]))
-    update(Main, Main.sets)
-    Main.level = Main.sets.level or "warn"
-    level(Main.level)
-    fnm = checkargs()
-    banner()
-    out(fmt(Main, skip="cmd,sets,txt,otxt", empty=False))
-    opml(fnm)
-    nrs = sync()
-    out(f"{nrs} feeds synced")
-    privileges()
-    inits("irc,rss")
-    forever()
+"commands"
+
+
+def cmd(event):
+    event.reply(",".join(sorted([x for x in Commands.names if x not in Main.ignore])))
+
+
+"runtime"
 
 
 def wrapped(func):
@@ -148,10 +227,14 @@ def main():
     if check("v"):
         level("debug")
         setattr(Main.opts, "v", True)
-    if check("d"):
+    if check('c'):
+        wrap(console)
+    elif check('x'):
+        control()
+    elif check("d"):
         background()
     else:
-        wrapped(service)
+        wrap(service)
 
 
 if __name__ == "__main__":

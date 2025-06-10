@@ -14,7 +14,6 @@ import threading
 from .cache  import Cache
 from .object import fqn, update
 from .serial import dump, load
-from .paths  import store
 
 
 lock = threading.RLock()
@@ -55,6 +54,10 @@ def read(obj, path):
         Cache.update(path, obj)
 
 
+def setwd(pth):
+    Workdir.wdr = pth
+
+
 def skel():
     pth = pathlib.Path(store())
     pth.mkdir(parents=True, exist_ok=True)
@@ -90,6 +93,7 @@ def __dir__():
         'getpath',
         'ident',
         'read',
+        'setwd',
         'store',
         'strip',
         'write'
