@@ -17,7 +17,8 @@ sys.path.insert(0, os.getcwd())
 from rssfetch.client  import Client
 from rssfetch.errors  import Errors, full
 from rssfetch.event   import Event
-from rssfetch.modules import Commands, Main, command, fmt, inits, level, parse
+from rssfetch.modules import Commands, Main
+from rssfetch.modules import command, fmt, inits, level, mods, parse
 from rssfetch.object  import update
 from rssfetch.persist import setwd
 
@@ -75,6 +76,7 @@ def console():
     level(Main.level or "debug")
     if "v" in Main.opts:
         banner()
+    mods()
     for _mod, thr in inits(Main.init):
         if "w" in Main.opts:
             thr.join(30.0)
@@ -90,6 +92,7 @@ def control():
     Commands.add(cmd)
     parse(Main, " ".join(sys.argv[1:]))
     level(Main.level or "warn")
+    mods()
     csl = CLI()
     evt = Event()
     evt.orig = repr(csl)

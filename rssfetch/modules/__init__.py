@@ -90,7 +90,7 @@ def scan(mod):
         if key.startswith("cb"):
             continue
         if 'event' in cmdz.__code__.co_varnames:
-            Commands.add(cmdz, mod)
+            Commands.add(cmdz)
 
 
 "modules"
@@ -130,6 +130,27 @@ def load(name):
             spec.loader.exec_module(module)
             sys.modules[mname] = module
         return module
+
+
+def mods(names=""):
+    res = []
+    for nme in modules():
+        if names and nme not in spl(names):
+            continue
+        mod = load(nme)
+        if not mod:
+            continue
+        res.append(mod)
+        scan(mod)
+    return res
+
+
+def modules(mdir=""):
+    return sorted([
+                   x[:-3] for x in os.listdir(mdir or path)
+                   if x.endswith(".py") and not x.startswith("__") and
+                   x[:-3] not in Main.ignore
+                  ])
 
 
 "utilities"
