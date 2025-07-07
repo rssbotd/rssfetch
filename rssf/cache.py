@@ -13,15 +13,6 @@ import time
 from .object import fqn, items, update
 
 
-lock = threading.RLock()
-j    = os.path.join
-
-
-class Error(Exception):
-
-    pass
-
-
 class Cache:
 
     objs = {}
@@ -76,7 +67,7 @@ def getpath(obj):
 
 
 def ident(obj):
-    return j(fqn(obj),*str(datetime.datetime.now()).split())
+    return os.path.join(fqn(obj),*str(datetime.datetime.now()).split())
 
 
 def isdeleted(obj):
@@ -125,7 +116,6 @@ def search(obj, selector, matching=False):
 def __dir__():
     return (
         'Cache',
-        'Error',
         'find',
         'fns',
         'fntime',

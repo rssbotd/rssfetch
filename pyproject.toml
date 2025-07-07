@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 
 [project]
-name = "rssfetch"
+name = "rssf"
 version = "1"
 authors = [
     {name = "Bart Thate", email = "rssbotd@gmail.com" },
@@ -32,9 +32,8 @@ classifiers=[
 
 [tool.setuptools]
 script-files = [
-    'bin/rssfetch',
+    'bin/rssf',
 ]
 packages = [
-    'rssfetch',
-    'rssfetch.modules'
+    'rssf',
 ]

@@ -49,6 +49,21 @@ class Feed(Default):
         self.name = ""
 
 
+class Rss(Default):
+
+    def __init__(self):
+        Default.__init__(self)
+        self.display_list = 'title,link,author'
+        self.insertid     = None
+        self.name         = ""
+        self.rss          = ""
+
+
+class Urls(Default):
+
+    pass
+
+
 class Fetcher(Object):
 
     def __init__(self):
@@ -243,22 +258,8 @@ class Parser:
         return result
 
 
-class Rss(Default):
 
-    def __init__(self):
-        Default.__init__(self)
-        self.display_list = 'title,link,author'
-        self.insertid     = None
-        self.name         = ""
-        self.rss          = ""
-
-
-class Urls(Default):
-
-    pass
-
-
-"utilities"
+"urls"
 
 
 def attrs(obj, txt):
@@ -337,50 +338,17 @@ def useragent(txt):
     return 'Mozilla/5.0 (X11; Linux x86_64) ' + txt
 
 
-"commands"
+"opml"
 
 
-def dpl(event):
-    if len(event.args) < 2:
-        event.reply('dpl <stringinurl> <item1,item2>')
-        return
-    setter = {'display_list': event.args[1]}
-    for fnm,  rss in find("rss", {'rss': event.args[0]}):
-        if rss:
-            update(rss, setter)
-            write(rss, fnm)
-    event.done()
-
-
-def exp(event):
-    with importlock:
-        event.reply(TEMPLATE)
-        nrs = 0
-        for _fn, ooo in find("rss"):
-            nrs += 1
-            obj = Rss()
-            update(obj, ooo)
-            name = f"url{nrs}"
-            txt = f'<outline name="{name}" display_list="{obj.display_list}" xmlUrl="{obj.rss}"/>'
-            event.reply(" "*12 + txt)
-        event.reply(" "*8 + "</outline>")
-        event.reply("    <body>")
-        event.reply("</opml>")
-
-
-def imp(event):
-    if not event.args:
-        event.reply("imp <filename>")
-        return
-    fnm = event.args[0]
+def opml(fnm):
     if not os.path.exists(fnm):
-        event.reply(f"no {fnm} file found.")
+        print(f"no {fnm} file found.")
         return
     with open(fnm, "r", encoding="utf-8") as file:
         txt = file.read()
     prs = OPML()
     nrs = 0
-    nrskip = 0
     insertid = shortid()
     with importlock:
         for obj in prs.parse(txt, 'outline', "name,display_list,xmlUrl"):
@@ -389,95 +357,17 @@ def imp(event):
                 continue
             if not url.startswith("http"):
                 continue
-            has = list(find("rss", {'rss': url}, matching=True))
-            if has:
-                skipped.append(url)
-                nrskip += 1
-                continue
             rss = Rss()
             update(rss, obj)
             rss.rss = obj.xmlUrl
             rss.insertid = insertid
             write(rss, getpath(rss))
             nrs += 1
-    if nrskip:
-        event.reply(f"skipped {nrskip} urls.")
     if nrs:
-        event.reply(f"added {nrs} urls.")
+        print(f"added {nrs} urls.")
 
 
-def nme(event):
-    if len(event.args) != 2:
-        event.reply('nme <stringinurl> <name>')
-        return
-    selector = {'rss': event.args[0]}
-    for fnm, rss in find("rss", selector):
-        feed = Rss()
-        update(feed, rss)
-        if feed:
-            feed.name = str(event.args[1])
-            write(feed, fnm)
-    event.done()
-
-
-def rem(event):
-    if len(event.args) != 1:
-        event.reply('rem <stringinurl>')
-        return
-    for fnm, rss in find("rss"):
-        feed = Default()
-        update(feed, rss)
-        if event.args[0] not in feed.rss:
-            continue
-        if feed:
-            feed.__deleted__ = True
-            write(rss, fnm)
-    event.done()
-
-
-def res(event):
-    if len(event.args) != 1:
-        event.reply('res <stringinurl>')
-        return
-    for fnm, rss in find("rss", deleted=True):
-        feed = Default()
-        update(feed, rss)
-        if event.args[0] not in feed.rss:
-            continue
-        if feed:
-            feed.__deleted__ = False
-            write(feed, fnm)
-    event.done()
-
-
-def rss(event):
-    if not event.rest:
-        nrs = 0
-        for fnm, rss in find('rss'):
-            nrs += 1
-            elp = elapsed(time.time()-fntime(fnm))
-            txt = fmt(rss)
-            event.reply(f'{nrs} {txt} {elp}')
-        if not nrs:
-            event.reply('no feed found.')
-        return
-    url = event.args[0]
-    if 'http' not in url:
-        event.reply('i need an url')
-        return
-    for fnm, result in find("rss", {'rss': url}):
-        if result:
-            event.reply(f"{url} is known")
-            return
-    rss = Rss()
-    rss.rss = event.args[0]
-    write(rss, getpath(rss))
-    event.done()
-
-
-def syn(event):
-    if DEBUG:
-        return
+def sync():
     fetcher = Fetcher()
     fetcher.start(False)
     thrs = fetcher.run(True)
@@ -485,7 +375,10 @@ def syn(event):
     for thr in thrs:
         thr.join()
         nrs += 1
-    event.reply(f"{nrs} feeds synced")
+    print(f"{nrs} feeds synced")
+
+
+"data"
 
 
 TEMPLATE = """<opml version="1.0">
@@ -494,3 +387,13 @@ TEMPLATE = """<opml version="1.0">
     </head>
     <body>
         <outline title="opml" text="rss feeds">"""
+
+
+"interface"
+
+
+def __init__():
+    return (
+        'opml',
+        'sync'
+    )
